@@ -234,7 +234,7 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
         <div class="bg-gradient-to-r from-emerald-50 to-slate-100 dark:from-emerald-950 dark:to-slate-900 border border-emerald-500/30 p-5 rounded-2xl flex flex-wrap gap-3 justify-between items-center shadow-inner">
           <div><span class="text-xs uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 block">Total Pendapatan Harian</span>
           <span class="text-xs text-slate-500 dark:text-slate-400">Sisa Kas + Non-Tunai/QRIS</span></div>
-          <span class="text-3xl font-black tracking-tight"><?=rupiah($totalPendapatan)?></span>
+          <span class="text-2xl sm:text-3xl font-black tracking-tight break-words"><?=rupiah($totalPendapatan)?></span>
         </div>
         <form method="post" class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800/80 space-y-3">
           <input type="hidden" name="aksi" value="transfer_simpan"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>">
@@ -273,7 +273,7 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
           <div><p class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Sisa Kas Fisik (Tunai)</p>
           <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Formula: Pendapatan – Pengeluaran – Transfer – Kasbon + Setoran</p>
           <p class="text-[11px] text-slate-500 dark:text-slate-400">Pengeluaran <?=rupiah($totalKeluar)?> • Transfer <?=rupiah($transfer)?> • Kasbon <?=rupiah($totPinjamHari)?> • Setoran <?=rupiah($totSetorHari)?></p></div>
-          <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400"><?=rupiah($saldoKas)?></span>
+          <span class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 break-words"><?=rupiah($saldoKas)?></span>
         </div>
       </div>
 

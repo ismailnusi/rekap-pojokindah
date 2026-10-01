@@ -40,21 +40,21 @@ unset($r);
   <div class="grid grid-cols-2 <?= $owner ? 'lg:grid-cols-4' : '' ?> gap-4">
     <div class="glass-card p-5 rounded-3xl border-l-4 border-l-emerald-500">
       <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Penjualan</span>
-      <span class="text-2xl font-black mt-1 block"><?=rupiah($tJual)?></span>
+      <span class="text-lg sm:text-2xl font-black break-words mt-1 block"><?=rupiah($tJual)?></span>
     </div>
     <?php if ($owner): ?>
     <div class="glass-card p-5 rounded-3xl border-l-4 border-l-amber-500">
       <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Modal (HPP)</span>
-      <span class="text-2xl font-black mt-1 block"><?=rupiah($tModal)?></span>
+      <span class="text-lg sm:text-2xl font-black break-words mt-1 block"><?=rupiah($tModal)?></span>
     </div>
     <div class="glass-card p-5 rounded-3xl border-l-4 border-l-teal-400">
       <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Laba Kotor</span>
-      <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1 block"><?=rupiah($tLaba)?></span>
+      <span class="text-lg sm:text-2xl font-black break-words text-emerald-600 dark:text-emerald-400 mt-1 block"><?=rupiah($tLaba)?></span>
     </div>
     <?php endif; ?>
     <div class="glass-card p-5 rounded-3xl border-l-4 border-l-blue-500">
       <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Volume Terjual</span>
-      <span class="text-2xl font-black text-blue-500 mt-1 block"><?=number_format($tQty)?> pcs</span>
+      <span class="text-lg sm:text-2xl font-black break-words text-blue-500 mt-1 block"><?=number_format($tQty)?> pcs</span>
     </div>
   </div>
 

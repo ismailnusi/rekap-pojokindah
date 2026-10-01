@@ -450,6 +450,7 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  .glass-card { min-width: 0; } /* cegah kartu meluber di grid HP */
   /* Light mode */
   html:not(.dark) body { background-color: #f1f5f9; color: #0f172a; }
   html:not(.dark) .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
@@ -492,17 +493,17 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
 <header class="glass-card sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-20 gap-3">
-      <div class="flex items-center space-x-3.5">
+      <div class="flex items-center space-x-2 sm:space-x-3.5 min-w-0">
         <div class="w-10 h-10 rounded-full overflow-hidden bg-black flex items-center justify-center shadow-lg shrink-0 relative">
           <span class="absolute inset-0 flex items-center justify-center font-black text-white text-sm tracking-tight">PI</span>
           <img src="assets/kop-invoice.png?v=1" alt="PI" class="relative w-full h-full object-cover" onerror="this.remove()">
         </div>
-        <div>
+        <div class="min-w-0">
           <div class="flex items-center space-x-2">
-            <h1 class="text-lg font-bold tracking-wider uppercase">Pojok Indah</h1>
-            <span class="text-[10px] bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-semibold">PRO</span>
+            <h1 class="text-base sm:text-lg font-bold tracking-wider uppercase whitespace-nowrap">Pojok Indah</h1>
+            <span class="text-[10px] bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-semibold shrink-0">PRO</span>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 tracking-wide">Enterprise Financial &amp; POS Portal</p>
+          <p class="hidden min-[420px]:block text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 tracking-wide truncate">Enterprise Financial &amp; POS Portal</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
