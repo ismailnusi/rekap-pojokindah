@@ -75,7 +75,7 @@ $restock = stok_menipis($pdo);
           <input type="text" name="kode" required pattern="[A-Za-z0-9]+" value="<?=e($edit['kode'] ?? $nextKode)?>" class="w-full text-xs glass-input rounded-xl p-3 font-mono font-bold focus:outline-none"></div>
         <div><label class="block text-xs font-semibold mb-1.5">Nama Barang / Jasa</label>
           <input type="text" name="nama" required value="<?=e($edit['nama'] ?? '')?>" placeholder="cth: FOTO COPY WARNA" class="w-full text-xs glass-input rounded-xl p-3 focus:outline-none"></div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label class="block text-xs font-semibold mb-1.5">Harga Jual (Rp)</label>
             <input type="number" name="harga_jual" min="0" step="100" value="<?=e($edit['harga_jual'] ?? 0)?>" class="w-full text-xs glass-input rounded-xl p-3 focus:outline-none"></div>
           <div><label class="block text-xs font-semibold mb-1.5">Modal HPP (Rp)</label>

@@ -37,13 +37,13 @@ foreach ($list as $v) {
         <input type="hidden" name="aksi" value="invoice_buat">
         <input type="hidden" name="items_json" id="itemsJson">
         <h3 class="font-bold text-sm border-b border-slate-200 dark:border-slate-800 pb-4 flex items-center"><i class="fa-solid fa-file-circle-plus text-emerald-500 mr-2.5"></i> Buat Invoice Baru</h3>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label class="block text-xs font-semibold mb-1.5">Tanggal Invoice</label>
             <input type="date" name="tanggal" id="invTgl" value="<?=date('Y-m-d')?>" class="w-full text-xs glass-input rounded-xl p-3 focus:outline-none"></div>
           <div><label class="block text-xs font-semibold mb-1.5">Nomor Invoice</label>
             <input type="text" id="invNomor" readonly value="otomatis" class="w-full text-xs glass-input rounded-xl p-3 font-mono font-bold text-emerald-600 dark:text-emerald-400 focus:outline-none"></div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label class="block text-xs font-semibold mb-1.5">Nama Pemesan</label>
             <input type="text" name="pelanggan" required placeholder="cth: Budi" class="w-full text-xs glass-input rounded-xl p-3 focus:outline-none"></div>
           <div><label class="block text-xs font-semibold mb-1.5">No. WhatsApp</label>
@@ -68,7 +68,7 @@ foreach ($list as $v) {
             <label class="cursor-pointer"><input type="radio" name="status" value="belum" class="peer hidden">
               <span class="block text-center px-2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 peer-checked:bg-slate-500 peer-checked:text-white peer-checked:border-slate-500 transition">Cek Total</span></label>
           </div>
-          <div id="dpWrap" class="hidden mt-2 grid grid-cols-2 gap-3">
+          <div id="dpWrap" class="hidden mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><label class="block text-xs font-semibold mb-1.5">Nominal DP (Rp)</label>
               <input type="number" name="dp_nominal" id="dpNominal" min="0" value="0" class="w-full text-xs glass-input rounded-xl p-3 focus:outline-none"></div>
             <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs"><span class="text-slate-500 dark:text-slate-400">Sisa tagihan:</span><br><b id="invSisa" class="text-base text-amber-600 dark:text-amber-400">Rp0</b></div>
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
       <input type="hidden" name="aksi" value="invoice_edit">
       <input type="hidden" name="id" id="eId">
       <input type="hidden" name="items_json" id="eItems">
-      <div class="grid grid-cols-3 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div><label class="block text-xs font-semibold mb-1.5">Tanggal</label>
           <input type="date" name="tanggal" id="eTgl" class="w-full text-xs glass-input rounded-xl p-3 focus:outline-none"></div>
         <div><label class="block text-xs font-semibold mb-1.5">Nama Pemesan</label>
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <span class="text-xs font-bold uppercase tracking-wider">Total</span>
         <span id="eTotal" class="text-2xl font-black">Rp0</span>
       </div>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div><label class="block text-xs font-semibold mb-1.5">Status</label>
           <div class="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
             <label class="cursor-pointer"><input type="radio" name="estatus" value="lunas" class="peer hidden">
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <option value="tunai">Tunai</option><option value="qris">QRIS</option><option value="transfer">Transfer</option>
           </select></div>
       </div>
-      <div id="eDpWrap" class="hidden grid grid-cols-2 gap-3">
+      <div id="eDpWrap" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div><label class="block text-xs font-semibold mb-1.5">Nominal DP (Rp)</label>
           <input type="number" name="dp_nominal" id="eDp" min="0" value="0" class="w-full text-xs glass-input rounded-xl p-3 focus:outline-none"></div>
         <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs"><span class="text-slate-500 dark:text-slate-400">Sisa tagihan:</span><br><b id="eSisa" class="text-base text-amber-600 dark:text-amber-400">Rp0</b></div>

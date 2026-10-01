@@ -203,8 +203,8 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
             <i class="fa-solid fa-circle-plus"></i><span>Tambah Transaksi</span>
           </button>
         </form>
-        <div class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 mt-4">
-          <table class="w-full text-left text-xs">
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 custom-scrollbar mt-4">
+          <table class="w-full text-left text-xs min-w-[560px]">
             <thead class="tbl-head font-semibold border-b border-slate-200 dark:border-slate-800">
               <tr><th class="p-3">Kode</th><th class="p-3">Nama Item</th><th class="p-3 text-right">Harga</th><th class="p-3 text-center">Qty</th><th class="p-3 text-right">Total</th><th class="p-3"></th></tr>
             </thead>
@@ -231,7 +231,7 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
 
     <div class="lg:col-span-7 space-y-6">
       <div class="glass-card p-6 rounded-3xl space-y-5">
-        <div class="bg-gradient-to-r from-emerald-50 to-slate-100 dark:from-emerald-950 dark:to-slate-900 border border-emerald-500/30 p-5 rounded-2xl flex justify-between items-center shadow-inner">
+        <div class="bg-gradient-to-r from-emerald-50 to-slate-100 dark:from-emerald-950 dark:to-slate-900 border border-emerald-500/30 p-5 rounded-2xl flex flex-wrap gap-3 justify-between items-center shadow-inner">
           <div><span class="text-xs uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 block">Total Pendapatan Harian</span>
           <span class="text-xs text-slate-500 dark:text-slate-400">Sisa Kas + Non-Tunai/QRIS</span></div>
           <span class="text-3xl font-black tracking-tight"><?=rupiah($totalPendapatan)?></span>
@@ -248,15 +248,15 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
 
       <div class="glass-card p-6 rounded-3xl space-y-5">
         <h3 class="font-bold text-sm border-b border-slate-200 dark:border-slate-800 pb-4 flex items-center"><i class="fa-solid fa-receipt text-rose-400 mr-2.5"></i> Pengeluaran Operasional (<?=e($tanggal)?>)</h3>
-        <form method="post" class="grid grid-cols-12 gap-2">
+        <form method="post" class="grid grid-cols-1 sm:grid-cols-12 gap-2">
           <input type="hidden" name="aksi" value="keluar_tambah"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>">
-          <input type="text" name="nama" required placeholder="Deskripsi (cth: Kertas HVS)" class="col-span-5 text-xs glass-input rounded-xl p-3 focus:outline-none">
-          <input type="number" name="harga" value="0" min="0" placeholder="Harga" class="col-span-3 text-xs glass-input rounded-xl p-3 focus:outline-none">
-          <input type="number" name="qty" value="1" min="1" placeholder="Qty" class="col-span-2 text-xs glass-input rounded-xl p-3 focus:outline-none">
-          <button class="col-span-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-500 border border-rose-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
+          <input type="text" name="nama" required placeholder="Deskripsi (cth: Kertas HVS)" class="col-span-1 sm:col-span-5 text-xs glass-input rounded-xl p-3 focus:outline-none">
+          <input type="number" name="harga" value="0" min="0" placeholder="Harga" class="col-span-1 sm:col-span-3 text-xs glass-input rounded-xl p-3 focus:outline-none">
+          <input type="number" name="qty" value="1" min="1" placeholder="Qty" class="col-span-1 sm:col-span-2 text-xs glass-input rounded-xl p-3 focus:outline-none">
+          <button class="col-span-1 sm:col-span-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-500 border border-rose-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center py-3 sm:py-0"><i class="fa-solid fa-plus"></i></button>
         </form>
-        <div class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800">
-          <table class="w-full text-left text-xs">
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 custom-scrollbar">
+          <table class="w-full text-left text-xs min-w-[480px]">
             <thead class="tbl-head font-semibold border-b border-slate-200 dark:border-slate-800">
               <tr><th class="p-3">Nama Pengeluaran</th><th class="p-3 text-right">Harga</th><th class="p-3 text-center">Banyak</th><th class="p-3 text-right">Total</th><th class="p-3"></th></tr>
             </thead>
@@ -280,28 +280,28 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
       <div class="glass-card p-6 rounded-3xl space-y-5">
         <h3 class="font-bold text-sm border-b border-slate-200 dark:border-slate-800 pb-4 flex items-center"><i class="fa-solid fa-hand-holding-dollar text-amber-500 mr-2.5"></i> Kasbon / Pinjaman Karyawan (<?=e($tanggal)?>)</h3>
 
-        <form method="post" class="grid grid-cols-12 gap-2">
+        <form method="post" class="grid grid-cols-1 sm:grid-cols-12 gap-2">
           <input type="hidden" name="aksi" value="kasbon_tambah"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>">
-          <input type="text" name="nama" required placeholder="Nama karyawan" class="col-span-3 text-xs glass-input rounded-xl p-3 focus:outline-none">
-          <input type="number" name="jumlah" required min="1" placeholder="Jumlah pinjaman" class="col-span-3 text-xs glass-input rounded-xl p-3 focus:outline-none">
-          <input type="text" name="keterangan" placeholder="Keterangan / untuk apa" class="col-span-4 text-xs glass-input rounded-xl p-3 focus:outline-none">
-          <button title="Simpan pinjaman" class="col-span-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1"><i class="fa-solid fa-plus"></i> Pinjam</button>
+          <input type="text" name="nama" required placeholder="Nama karyawan" class="col-span-1 sm:col-span-3 text-xs glass-input rounded-xl p-3 focus:outline-none">
+          <input type="number" name="jumlah" required min="1" placeholder="Jumlah pinjaman" class="col-span-1 sm:col-span-3 text-xs glass-input rounded-xl p-3 focus:outline-none">
+          <input type="text" name="keterangan" placeholder="Keterangan / untuk apa" class="col-span-1 sm:col-span-4 text-xs glass-input rounded-xl p-3 focus:outline-none">
+          <button title="Simpan pinjaman" class="col-span-1 sm:col-span-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 py-3 sm:py-0"><i class="fa-solid fa-plus"></i> Pinjam</button>
         </form>
-        <form method="post" class="grid grid-cols-12 gap-2">
+        <form method="post" class="grid grid-cols-1 sm:grid-cols-12 gap-2">
           <input type="hidden" name="aksi" value="setoran_tambah"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>">
-          <select name="nama" required class="col-span-3 text-xs glass-input rounded-xl p-3 focus:outline-none" <?= $adaSisa ? '' : 'disabled' ?>>
+          <select name="nama" required class="col-span-1 sm:col-span-3 text-xs glass-input rounded-xl p-3 focus:outline-none" <?= $adaSisa ? '' : 'disabled' ?>>
             <option value=""><?= $adaSisa ? 'Pilih yang menyetor...' : 'Belum ada kasbon berjalan' ?></option>
             <?php foreach ($adaSisa as $o): ?>
               <option value="<?=e($o['nama'])?>"><?=e($o['nama'])?> (sisa <?=rupiah($o['sisa'])?>)</option>
             <?php endforeach; ?>
           </select>
-          <input type="number" name="jumlah" required min="1" placeholder="Jumlah setoran" class="col-span-3 text-xs glass-input rounded-xl p-3 focus:outline-none" <?= $adaSisa ? '' : 'disabled' ?>>
-          <input type="text" name="keterangan" placeholder="Keterangan cicilan" class="col-span-4 text-xs glass-input rounded-xl p-3 focus:outline-none" <?= $adaSisa ? '' : 'disabled' ?>>
-          <button title="Simpan setoran" <?= $adaSisa ? '' : 'disabled' ?> class="col-span-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 disabled:opacity-40"><i class="fa-solid fa-plus"></i> Setor</button>
+          <input type="number" name="jumlah" required min="1" placeholder="Jumlah setoran" class="col-span-1 sm:col-span-3 text-xs glass-input rounded-xl p-3 focus:outline-none" <?= $adaSisa ? '' : 'disabled' ?>>
+          <input type="text" name="keterangan" placeholder="Keterangan cicilan" class="col-span-1 sm:col-span-4 text-xs glass-input rounded-xl p-3 focus:outline-none" <?= $adaSisa ? '' : 'disabled' ?>>
+          <button title="Simpan setoran" <?= $adaSisa ? '' : 'disabled' ?> class="col-span-1 sm:col-span-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 disabled:opacity-40 py-3 sm:py-0"><i class="fa-solid fa-plus"></i> Setor</button>
         </form>
 
-        <div class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800">
-          <table class="w-full text-left text-xs">
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 custom-scrollbar">
+          <table class="w-full text-left text-xs min-w-[520px]">
             <thead class="tbl-head font-semibold border-b border-slate-200 dark:border-slate-800">
               <tr><th class="p-3">Jenis</th><th class="p-3">Nama</th><th class="p-3 text-right">Jumlah</th><th class="p-3">Keterangan</th><th class="p-3"></th></tr>
             </thead>

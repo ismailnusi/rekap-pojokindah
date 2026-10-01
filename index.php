@@ -506,7 +506,7 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <nav class="flex space-x-1 sm:space-x-2 bg-slate-100 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+        <nav class="hidden md:flex space-x-1 sm:space-x-2 bg-slate-100 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
           <a href="index.php?page=harian&bulan=<?=e($bulan)?>&tanggal=<?=e($tanggal)?>" class="<?= $nav('harian') ?> px-4 py-2 rounded-xl text-xs sm:text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 flex items-center space-x-2">
             <i class="fa-regular fa-pen-to-square"></i><span class="hidden sm:inline">Penjualan Harian</span>
           </a>
@@ -523,16 +523,26 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
             <i class="fa-solid fa-chart-pie"></i><span class="hidden sm:inline">Analytics</span>
           </a>
         </nav>
+        <button id="menuBtn" type="button" title="Menu" class="md:hidden h-10 w-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center hover:scale-105 transition text-sm">
+          <i class="fa-solid fa-bars"></i>
+        </button>
         <button id="themeToggle" type="button" title="Mode terang/gelap" class="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center gap-2 text-amber-500 dark:text-amber-300 hover:scale-105 transition text-xs font-bold">
           <i id="iconSun" class="fa-solid fa-sun"></i>
           <i id="iconMoon" class="fa-solid fa-moon"></i>
-          <span id="themeLabel">Gelap</span>
+          <span id="themeLabel" class="hidden min-[400px]:inline">Gelap</span>
         </button>
         <button id="akunBtn" type="button" title="Akun (<?=e($_SESSION['uname'] ?? '')?>)" class="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center gap-2 text-emerald-600 dark:text-emerald-400 hover:scale-105 transition text-xs font-bold">
           <i class="fa-solid fa-circle-user"></i>
           <span class="hidden sm:inline max-w-[80px] truncate"><?=e($_SESSION['uname'] ?? '')?></span>
         </button>
       </div>
+    </div>
+    <div id="mobileMenu" class="hidden md:hidden absolute top-full left-2 right-2 mt-1 glass-card rounded-2xl p-2 space-y-1 shadow-2xl z-50">
+      <a href="index.php?page=harian&bulan=<?=e($bulan)?>&tanggal=<?=e($tanggal)?>" class="<?= $nav('harian') ?> block px-4 py-3 rounded-xl text-sm transition-all"><i class="fa-regular fa-pen-to-square mr-3 w-4"></i>Penjualan Harian</a>
+      <a href="index.php?page=barang" class="<?= $nav('barang') ?> block px-4 py-3 rounded-xl text-sm transition-all"><i class="fa-solid fa-boxes-stacked mr-3 w-4"></i>Data Barang<?= $jmlRestock > 0 ? ' <span class="text-[10px] font-extrabold bg-rose-500 text-white px-1.5 py-0.5 rounded-full">' . $jmlRestock . '</span>' : '' ?></a>
+      <a href="index.php?page=invoice" class="<?= $nav('invoice') ?> block px-4 py-3 rounded-xl text-sm transition-all"><i class="fa-solid fa-receipt mr-3 w-4"></i>Invoice / Nota</a>
+      <a href="index.php?page=rekapan&bulan=<?=e($bulan)?>" class="<?= $nav('rekapan') ?> block px-4 py-3 rounded-xl text-sm transition-all"><i class="fa-solid fa-file-invoice-dollar mr-3 w-4"></i>Rekapan</a>
+      <a href="index.php?page=diagram&mode=semua" class="<?= $nav('diagram') ?> block px-4 py-3 rounded-xl text-sm transition-all"><i class="fa-solid fa-chart-pie mr-3 w-4"></i>Analytics</a>
     </div>
   </div>
 </header>
@@ -618,6 +628,25 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
   document.getElementById('akunClose').addEventListener('click', close);
   m.addEventListener('click', function (e) { if (e.target === m) close(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !m.classList.contains('hidden')) close(); });
+})();
+</script>
+
+<script>
+(function () {
+  var b = document.getElementById('menuBtn');
+  var m = document.getElementById('mobileMenu');
+  if (!b || !m) return;
+  b.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var open = m.classList.toggle('hidden');
+    b.innerHTML = open ? '<i class="fa-solid fa-bars"></i>' : '<i class="fa-solid fa-xmark"></i>';
+  });
+  document.addEventListener('click', function (e) {
+    if (!m.classList.contains('hidden') && !m.contains(e.target)) {
+      m.classList.add('hidden');
+      b.innerHTML = '<i class="fa-solid fa-bars"></i>';
+    }
+  });
 })();
 </script>
 

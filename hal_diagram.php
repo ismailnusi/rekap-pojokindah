@@ -124,7 +124,7 @@ $blP = [1=>'Jan',2=>'Feb',3=>'Mar',4=>'Apr',5=>'Mei',6=>'Jun',7=>'Jul',8=>'Agu',
       <?php if (!$rincian): ?>
         <p class="text-center text-slate-500 italic text-xs py-8">Belum ada pengeluaran pada periode ini.</p>
       <?php else: ?>
-      <table class="w-full text-left text-xs">
+      <table class="w-full text-left text-xs min-w-[480px]">
         <thead class="tbl-head font-semibold border-b border-slate-200 dark:border-slate-800 sticky top-0">
           <tr><th class="p-3">Tanggal</th><th class="p-3">Pengeluaran</th><th class="p-3 text-right">Harga</th><th class="p-3 text-center">Qty</th><th class="p-3 text-right">Jumlah</th></tr>
         </thead>
@@ -194,7 +194,7 @@ $ftgl = function ($d) use ($hrP, $blP) {
       <div>
         <p class="text-xs font-bold mb-2">Sisa per orang (saat ini, semua tanggal)</p>
         <?php if (!$ringkasOrang): ?><p class="text-slate-500 italic text-xs">Belum ada kasbon.</p><?php else: ?>
-        <table class="w-full text-left text-xs">
+        <table class="w-full text-left text-xs min-w-[440px]">
           <thead class="tbl-head font-semibold border-b border-slate-200 dark:border-slate-800">
             <tr><th class="p-2.5">Nama</th><th class="p-2.5 text-right">Total Pinjam</th><th class="p-2.5 text-right">Total Setor</th><th class="p-2.5 text-right">Sisa</th></tr>
           </thead>
@@ -214,7 +214,7 @@ $ftgl = function ($d) use ($hrP, $blP) {
       <div>
         <p class="text-xs font-bold mb-2">Daftar pinjaman (<?=e($mode === 'bulan' ? $bulan : 'semua tanggal')?>)</p>
         <?php if (!$kasbonList): ?><p class="text-slate-500 italic text-xs">Tidak ada pinjaman pada periode ini.</p><?php else: ?>
-        <table class="w-full text-left text-xs">
+        <table class="w-full text-left text-xs min-w-[480px]">
           <thead class="tbl-head font-semibold border-b border-slate-200 dark:border-slate-800">
             <tr><th class="p-2.5">Tanggal</th><th class="p-2.5">Nama</th><th class="p-2.5 text-right">Jumlah</th><th class="p-2.5">Untuk apa</th></tr>
           </thead>
@@ -234,7 +234,7 @@ $ftgl = function ($d) use ($hrP, $blP) {
       <div>
         <p class="text-xs font-bold mb-2">Daftar setoran / cicilan (<?=e($mode === 'bulan' ? $bulan : 'semua tanggal')?>)</p>
         <?php if (!$setorList): ?><p class="text-slate-500 italic text-xs">Tidak ada setoran pada periode ini.</p><?php else: ?>
-        <table class="w-full text-left text-xs">
+        <table class="w-full text-left text-xs min-w-[480px]">
           <thead class="tbl-head font-semibold border-b border-slate-200 dark:border-slate-800">
             <tr><th class="p-2.5">Tanggal</th><th class="p-2.5">Nama</th><th class="p-2.5 text-right">Jumlah</th><th class="p-2.5">Keterangan</th></tr>
           </thead>
