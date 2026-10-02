@@ -151,7 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (count($rows) > 1) {
                 $total = array_sum(array_column($rows,'qty'));
                 $keep = $rows[0]['id'];
-                $pdo->prepare("UPDATE transaksi SET qty=?, jumlah=qty*harga WHERE id=?")->execute([$total,$keep]);
+                // jumlah dihitung di PHP (SQLite memakai nilai lama jika qty*harga ditulis dalam 1 UPDATE)
+                $pdo->prepare("UPDATE transaksi SET qty=?, jumlah=? WHERE id=?")->execute([$total, $total * $harga, $keep]);
                 $ids = array_column(array_slice($rows,1),'id');
                 $pdo->prepare("DELETE FROM transaksi WHERE id IN (".implode(',',array_fill(0,count($ids),'?')).")")->execute($ids);
             }
