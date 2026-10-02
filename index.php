@@ -450,7 +450,7 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: clip; }
   .glass-card { min-width: 0; } /* cegah kartu meluber di grid HP */
   /* Light mode */
   html:not(.dark) body { background-color: #f1f5f9; color: #0f172a; }
@@ -501,13 +501,13 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
         </div>
         <div class="min-w-0">
           <div class="flex items-center space-x-2">
-            <h1 class="text-base sm:text-lg font-bold tracking-wider uppercase whitespace-nowrap">Pojok Indah</h1>
-            <span class="text-[10px] bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-semibold shrink-0">PRO</span>
+            <h1 class="text-sm min-[400px]:text-base sm:text-lg font-bold tracking-wider uppercase whitespace-nowrap">Pojok Indah</h1>
+            <span class="hidden min-[380px]:inline-block text-[10px] bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-semibold shrink-0">PRO</span>
           </div>
           <p class="hidden min-[420px]:block text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 tracking-wide truncate">Enterprise Financial &amp; POS Portal</p>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <nav class="hidden md:flex space-x-1 sm:space-x-2 bg-slate-100 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
           <a href="index.php?page=harian&bulan=<?=e($bulan)?>&tanggal=<?=e($tanggal)?>" class="<?= $nav('harian') ?> px-4 py-2 rounded-xl text-xs sm:text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 flex items-center space-x-2">
             <i class="fa-regular fa-pen-to-square"></i><span class="hidden sm:inline">Penjualan Harian</span>
@@ -528,12 +528,12 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
         <button id="menuBtn" type="button" title="Menu" class="md:hidden h-10 w-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center hover:scale-105 transition text-sm">
           <i class="fa-solid fa-bars"></i>
         </button>
-        <button id="themeToggle" type="button" title="Mode terang/gelap" class="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center gap-2 text-amber-500 dark:text-amber-300 hover:scale-105 transition text-xs font-bold">
+        <button id="themeToggle" type="button" title="Mode terang/gelap" class="h-10 px-2 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center gap-2 text-amber-500 dark:text-amber-300 hover:scale-105 transition text-xs font-bold">
           <i id="iconSun" class="fa-solid fa-sun"></i>
           <i id="iconMoon" class="fa-solid fa-moon"></i>
           <span id="themeLabel" class="hidden min-[400px]:inline">Gelap</span>
         </button>
-        <button id="akunBtn" type="button" title="Akun (<?=e($_SESSION['uname'] ?? '')?>)" class="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center gap-2 text-emerald-600 dark:text-emerald-400 hover:scale-105 transition text-xs font-bold">
+        <button id="akunBtn" type="button" title="Akun (<?=e($_SESSION['uname'] ?? '')?>)" class="h-10 px-2 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center gap-2 text-emerald-600 dark:text-emerald-400 hover:scale-105 transition text-xs font-bold">
           <i class="fa-solid fa-circle-user"></i>
           <span class="hidden sm:inline max-w-[80px] truncate"><?=e($_SESSION['uname'] ?? '')?></span>
         </button>
