@@ -142,6 +142,17 @@ function migrate($pdo) {
         waktu TEXT DEFAULT CURRENT_TIMESTAMP
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_loginlog_waktu ON login_log(waktu)");
+    // pengaturan hak akses karyawan + audit log keamanan
+    $pdo->exec("CREATE TABLE IF NOT EXISTS settings (kunci TEXT PRIMARY KEY, nilai TEXT DEFAULT '')");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        aksi TEXT NOT NULL DEFAULT '',
+        detail TEXT DEFAULT '',
+        ip TEXT DEFAULT '',
+        waktu TEXT DEFAULT CURRENT_TIMESTAMP
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_audit_waktu ON audit_log(waktu)");
 
     // Seed 161 barang jika kosong
     $cek = $pdo->query("SELECT COUNT(*) FROM barang")->fetchColumn();
@@ -241,6 +252,30 @@ function require_login() {
 }
 function is_owner() {
     return ($_SESSION['role'] ?? '') === 'owner';
+}
+
+// Pengaturan (untuk hak akses karyawan)
+function setting_get($pdo, $key, $default = '0') {
+    $st = $pdo->prepare("SELECT nilai FROM settings WHERE kunci=?");
+    $st->execute([$key]);
+    $v = $st->fetchColumn();
+    return $v === false ? $default : $v;
+}
+function setting_set($pdo, $key, $val) {
+    $pdo->prepare("INSERT INTO settings (kunci,nilai) VALUES (?,?)
+        ON CONFLICT(kunci) DO UPDATE SET nilai=excluded.nilai")->execute([$key, $val]);
+}
+
+// Izin aksi: owner selalu boleh; karyawan ikut centangan pengaturan
+function izin($pdo, $key) {
+    if (is_owner()) return true;
+    return setting_get($pdo, $key, '0') === '1';
+}
+
+// Catat aktivitas keamanan (dipakai untuk aksi karyawan)
+function audit($pdo, $aksi, $detail) {
+    $pdo->prepare("INSERT INTO audit_log (username,aksi,detail,ip,waktu) VALUES (?,?,?,?,?)")
+        ->execute([$_SESSION['uname'] ?? '', $aksi, $detail, client_ip(), date('Y-m-d H:i:s')]);
 }
 
 // IP pengunjung (untuk jejak login)

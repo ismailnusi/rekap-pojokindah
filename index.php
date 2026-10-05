@@ -26,16 +26,23 @@ if (!$meRow) {
 $_SESSION['uname'] = $meRow['username'];
 $_SESSION['role'] = $meRow['role'] ?? 'karyawan';
 $owner = is_owner();
+$page = $_GET['page'] ?? 'harian';
+$allowed = ['barang','harian','rekapan','diagram','invoice','akses'];
+if (!in_array($page, $allowed)) $page = 'harian';
+if ($page === 'akses' && !$owner) { $page = 'harian'; }
 
 // penolakan untuk aksi khusus owner
 $hanyaOwner = function ($kembali) {
-    flash('Aksi ini hanya untuk Owner.');
+    flash('Aksi ini tidak diizinkan untuk akun Anda.');
     header('Location: ' . $kembali);
     exit;
 };
-$page = $_GET['page'] ?? 'harian';
-$allowed = ['barang','harian','rekapan','diagram','invoice'];
-if (!in_array($page, $allowed)) $page = 'harian';
+// cek izin granular (owner selalu lolos); yang ditolak dicatat ke audit log
+$cek_izin = function ($key, $kembali, $detail) use ($pdo, $hanyaOwner) {
+    if (izin($pdo, $key)) return true;
+    if (!is_owner()) audit($pdo, 'ditolak', $detail);
+    $hanyaOwner($kembali);
+};
 $msg = flash();
 
 // JSON kalender libur (dipakai Date Picker kalender, tanpa reload)
@@ -49,6 +56,7 @@ if (($_GET['ajax'] ?? '') === 'libur') {
 if (($_GET['ajax'] ?? '') === 'notif_baca') {
     if (!$owner) { http_response_code(403); exit; }
     $_SESSION['notif_seen'] = (int)$pdo->query("SELECT COALESCE(MAX(id),0) FROM login_log")->fetchColumn();
+    $_SESSION['audit_seen'] = (int)$pdo->query("SELECT COALESCE(MAX(id),0) FROM audit_log")->fetchColumn();
     header('Content-Type: application/json');
     echo json_encode(['ok' => true]);
     exit;
@@ -59,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $aksi = $_POST['aksi'] ?? '';
 
     if ($aksi === 'barang_tambah') {
-        if (!$owner) $hanyaOwner('index.php?page=barang');
+        $cek_izin('izin_ubah_barang', 'index.php?page=barang', 'DITOLAK: tambah barang');
         $kode = strtoupper(trim($_POST['kode'] ?? ''));
         $nama = trim($_POST['nama'] ?? '');
         $harga = (int)($_POST['harga_jual'] ?? 0);
@@ -80,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $st = $pdo->prepare("INSERT INTO barang (kode,nama,harga_jual,modal,gambar,stok_awal,stok_min) VALUES (?,?,?,?,?,?,?)");
                 $st->execute([$kode,$nama,$harga,$modal,$gambar,$stok,$stokMin]);
+                if (!is_owner()) audit($pdo, 'tambah', "tambah barang $kode ($nama) " . rupiah($harga) . " stok $stok");
                 flash("Barang $kode berhasil ditambah.");
             } catch (Exception $ex) { flash('Gagal: kode/nama sudah ada.'); }
         }
@@ -87,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($aksi === 'barang_edit') {
-        if (!$owner) $hanyaOwner('index.php?page=barang');
+        $cek_izin('izin_ubah_barang', 'index.php?page=barang', 'DITOLAK: ubah barang');
         $kode_lama = $_POST['kode_lama'] ?? '';
         $kode = strtoupper(trim($_POST['kode'] ?? ''));
         $nama = trim($_POST['nama'] ?? '');
@@ -115,17 +124,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare("UPDATE transaksi SET kode_barang=? WHERE kode_barang=?")->execute([$kode,$kode_lama]);
             }
             $pdo->commit(); flash("Barang $kode diperbarui.");
+            if (!is_owner()) audit($pdo, 'edit', "ubah barang $kode_lama → $kode ($nama)");
         } catch (Exception $ex) { $pdo->rollBack(); flash('Gagal update: kode/nama bentrok.'); }
         header('Location: index.php?page=barang'); exit;
     }
 
     if ($aksi === 'barang_hapus') {
-        if (!$owner) $hanyaOwner('index.php?page=barang');
+        $cek_izin('izin_hapus_barang', 'index.php?page=barang', 'DITOLAK: hapus barang');
         $kode = $_POST['kode'] ?? '';
-        $r = $pdo->prepare("SELECT gambar FROM barang WHERE kode=?"); $r->execute([$kode]);
-        $g = $r->fetchColumn();
+        $r = $pdo->prepare("SELECT gambar, nama FROM barang WHERE kode=?"); $r->execute([$kode]);
+        $del = $r->fetch(PDO::FETCH_ASSOC);
+        $g = $del['gambar'] ?? null;
         $pdo->prepare("DELETE FROM barang WHERE kode=?")->execute([$kode]);
         if ($g && file_exists(UPLOAD_DIR.'/'.$g)) @unlink(UPLOAD_DIR.'/'.$g);
+        if (!is_owner()) audit($pdo, 'hapus', "hapus barang $kode (" . ($del['nama'] ?? '-') . ")");
         flash("Barang $kode dihapus.");
         header('Location: index.php?page=barang'); exit;
     }
@@ -172,15 +184,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($aksi === 'jual_hapus') {
         $t = $_POST['tanggal'] ?? date('Y-m-d');
-        if (!$owner) $hanyaOwner('index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7));
+        $backJ = 'index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7);
+        $cek_izin('izin_hapus_transaksi', $backJ, 'DITOLAK: hapus transaksi');
         $id = (int)($_POST['id'] ?? 0);
+        $dj = $pdo->prepare("SELECT t.*, b.nama FROM transaksi t LEFT JOIN barang b ON b.kode=t.kode_barang WHERE t.id=?");
+        $dj->execute([$id]);
+        $delJ = $dj->fetch(PDO::FETCH_ASSOC);
         $pdo->prepare("DELETE FROM transaksi WHERE id=?")->execute([$id]);
+        if (!is_owner() && $delJ) audit($pdo, 'hapus', "hapus transaksi #{$id} ({$delJ['kode_barang']} " . ($delJ['nama'] ?? '-') . " x{$delJ['qty']} = " . rupiah($delJ['jumlah']) . ", {$delJ['tanggal']})");
         header('Location: index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7)); exit;
     }
     if ($aksi === 'jual_edit_qty') {
         $t = $_POST['tanggal'] ?? date('Y-m-d');
         $back = 'index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7);
-        if (!$owner) $hanyaOwner($back);
+        $cek_izin('izin_edit_transaksi', $back, 'DITOLAK: ubah qty transaksi');
         $id = (int)($_POST['id'] ?? 0);
         $qty = max(1, (int)($_POST['qty'] ?? 1));
         $st = $pdo->prepare("SELECT t.*, COALESCE(b.stok_awal,0) AS stok_awal FROM transaksi t LEFT JOIN barang b ON b.kode=t.kode_barang WHERE t.id=?");
@@ -197,6 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $pdo->prepare("UPDATE transaksi SET qty=?, jumlah=?, dibuat_oleh=? WHERE id=?")
                 ->execute([$qty, $qty * (int)$row['harga'], $_SESSION['uname'] ?? '', $id]);
+            if (!is_owner()) audit($pdo, 'edit', "ubah qty {$row['kode_barang']} {$row['qty']} → $qty pada {$row['tanggal']}");
             flash("Qty {$row['kode_barang']} diubah menjadi $qty.");
         }
         header('Location: '.$back); exit;
@@ -224,9 +242,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($aksi === 'keluar_hapus') {
         $t = $_POST['tanggal'] ?? date('Y-m-d');
-        if (!$owner) $hanyaOwner('index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7));
+        $backK = 'index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7);
+        $cek_izin('izin_hapus_transaksi', $backK, 'DITOLAK: hapus pengeluaran');
         $id = (int)($_POST['id'] ?? 0);
+        $dk = $pdo->prepare("SELECT * FROM pengeluaran WHERE id=?");
+        $dk->execute([$id]);
+        $delK = $dk->fetch(PDO::FETCH_ASSOC);
         $pdo->prepare("DELETE FROM pengeluaran WHERE id=?")->execute([$id]);
+        if (!is_owner() && $delK) audit($pdo, 'hapus', "hapus pengeluaran '{$delK['nama']}' " . rupiah($delK['jumlah']) . " ({$delK['tanggal']})");
         header('Location: index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7)); exit;
     }
 
@@ -245,9 +268,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($aksi === 'kasbon_hapus') {
         $t = $_POST['tanggal'] ?? date('Y-m-d');
-        if (!$owner) $hanyaOwner('index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7));
+        $backKb = 'index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7);
+        $cek_izin('izin_hapus_transaksi', $backKb, 'DITOLAK: hapus kasbon');
         $id = (int)($_POST['id'] ?? 0);
+        $dkb = $pdo->prepare("SELECT * FROM kasbon WHERE id=?");
+        $dkb->execute([$id]);
+        $delKb = $dkb->fetch(PDO::FETCH_ASSOC);
         $pdo->prepare("DELETE FROM kasbon WHERE id=?")->execute([$id]);
+        if (!is_owner() && $delKb) audit($pdo, 'hapus', "hapus kasbon {$delKb['nama']} " . rupiah($delKb['jumlah']) . " ({$delKb['tanggal']})");
         header('Location: index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7)); exit;
     }
 
@@ -270,9 +298,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($aksi === 'setoran_hapus') {
         $t = $_POST['tanggal'] ?? date('Y-m-d');
-        if (!$owner) $hanyaOwner('index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7));
+        $backS = 'index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7);
+        $cek_izin('izin_hapus_transaksi', $backS, 'DITOLAK: hapus setoran kasbon');
         $id = (int)($_POST['id'] ?? 0);
+        $ds = $pdo->prepare("SELECT * FROM kasbon_setoran WHERE id=?");
+        $ds->execute([$id]);
+        $delS = $ds->fetch(PDO::FETCH_ASSOC);
         $pdo->prepare("DELETE FROM kasbon_setoran WHERE id=?")->execute([$id]);
+        if (!is_owner() && $delS) audit($pdo, 'hapus', "hapus setoran {$delS['nama']} " . rupiah($delS['jumlah']) . " ({$delS['tanggal']})");
         header('Location: index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7)); exit;
     }
 
@@ -404,6 +437,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // --- Simpan hak akses karyawan (owner) ---
+    if ($aksi === 'simpan_izin') {
+        if (!$owner) $hanyaOwner('index.php?page=harian');
+        foreach (['izin_edit_transaksi','izin_hapus_transaksi','izin_ubah_barang','izin_hapus_barang'] as $k) {
+            setting_set($pdo, $k, isset($_POST[$k]) ? '1' : '0');
+        }
+        flash('Hak akses karyawan diperbarui.');
+        header('Location: index.php?page=akses');
+        exit;
+    }
+
     // --- Kelola akun (owner) ---
     if ($aksi === 'user_tambah') {
         $pg = $_POST['page'] ?? 'harian';
@@ -455,11 +499,13 @@ $bulan = bulan_aktif();
 $tanggal = tanggal_aktif();
 $nav = function($p) use ($page) { return $p === $page ? 'nav-link active' : 'nav-link'; };
 $jmlRestock = count(stok_menipis($pdo));
-// notifikasi jejak login (owner saja)
+// notifikasi jejak login + aktivitas keamanan (owner saja)
 $notifUnread = 0;
 if ($owner) {
     $seen = (int)($_SESSION['notif_seen'] ?? 0);
-    $notifUnread = (int)$pdo->query("SELECT COUNT(*) FROM login_log WHERE id > $seen")->fetchColumn();
+    $seenA = (int)($_SESSION['audit_seen'] ?? 0);
+    $notifUnread = (int)$pdo->query("SELECT COUNT(*) FROM login_log WHERE id > $seen")->fetchColumn()
+        + (int)$pdo->query("SELECT COUNT(*) FROM audit_log WHERE id > $seenA")->fetchColumn();
 }
 ?>
 <!DOCTYPE html>
@@ -562,6 +608,11 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
           <a href="index.php?page=diagram&mode=semua" class="<?= $nav('diagram') ?> px-4 py-2 rounded-xl text-xs sm:text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 flex items-center space-x-2">
             <i class="fa-solid fa-chart-pie"></i><span class="hidden sm:inline">Analytics</span>
           </a>
+          <?php if ($owner): ?>
+          <a href="index.php?page=akses" class="<?= $nav('akses') ?> px-4 py-2 rounded-xl text-xs sm:text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 flex items-center space-x-2">
+            <i class="fa-solid fa-shield-halved"></i><span class="hidden sm:inline">Akses</span>
+          </a>
+          <?php endif; ?>
         </nav>
         <button id="menuBtn" type="button" title="Menu" class="md:hidden h-10 w-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center hover:scale-105 transition text-sm">
           <i class="fa-solid fa-bars"></i>
@@ -589,6 +640,9 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
       <a href="index.php?page=invoice" class="<?= $nav('invoice') ?> block px-4 py-3 rounded-xl text-sm transition-all"><i class="fa-solid fa-receipt mr-3 w-4"></i>Invoice / Nota</a>
       <a href="index.php?page=rekapan&bulan=<?=e($bulan)?>" class="<?= $nav('rekapan') ?> block px-4 py-3 rounded-xl text-sm transition-all"><i class="fa-solid fa-file-invoice-dollar mr-3 w-4"></i>Rekapan</a>
       <a href="index.php?page=diagram&mode=semua" class="<?= $nav('diagram') ?> block px-4 py-3 rounded-xl text-sm transition-all"><i class="fa-solid fa-chart-pie mr-3 w-4"></i>Analytics</a>
+      <?php if ($owner): ?>
+      <a href="index.php?page=akses" class="<?= $nav('akses') ?> block px-4 py-3 rounded-xl text-sm transition-all"><i class="fa-solid fa-shield-halved mr-3 w-4"></i>Hak Akses</a>
+      <?php endif; ?>
     </div>
   </div>
 </header>
@@ -605,6 +659,7 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
   elseif ($page === 'rekapan') include __DIR__.'/hal_rekapan.php';
   elseif ($page === 'diagram') include __DIR__.'/hal_diagram.php';
   elseif ($page === 'invoice') include __DIR__.'/hal_invoice.php';
+  elseif ($page === 'akses') include __DIR__.'/hal_akses.php';
   ?>
 </main>
 
@@ -679,17 +734,32 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
 
 <?php if ($owner):
   $logs = $pdo->query("SELECT username, status, ip, waktu FROM login_log ORDER BY id DESC LIMIT 50")->fetchAll(PDO::FETCH_ASSOC);
+  $auditNotif = $pdo->query("SELECT username, aksi, detail, ip, waktu FROM audit_log ORDER BY id DESC LIMIT 30")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <div id="notifModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="background:rgba(2,6,12,.8);backdrop-filter:blur(6px)">
   <div class="glass-card rounded-3xl w-full max-w-md max-h-[82vh] flex flex-col overflow-hidden">
     <div class="flex items-center justify-between gap-2 p-5 border-b border-slate-200 dark:border-slate-800">
       <div>
-        <h3 class="font-bold text-sm flex items-center"><i class="fa-solid fa-bell text-amber-500 mr-2.5"></i> Jejak Login</h3>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Siapa masuk &amp; percobaan gagal • 50 terbaru</p>
+        <h3 class="font-bold text-sm flex items-center"><i class="fa-solid fa-bell text-amber-500 mr-2.5"></i> Jejak Login &amp; Keamanan</h3>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Masuk, gagal login &amp; aktivitas karyawan</p>
       </div>
       <button type="button" id="notifClose" class="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-sm transition shrink-0">×</button>
     </div>
     <div class="overflow-auto custom-scrollbar p-4 space-y-2">
+      <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 pt-1">Aktivitas karyawan</p>
+      <?php if (!$auditNotif): ?><p class="text-center text-slate-500 italic text-xs py-3">Belum ada aktivitas karyawan.</p><?php endif; ?>
+      <?php foreach ($auditNotif as $a):
+        $ta = strtotime($a['waktu']);
+        $fa = date('d/m/Y H:i', $ta);
+        $aa = $a['aksi'];
+        $cls = $aa === 'hapus' ? 'bg-rose-500/15 text-rose-500' : ($aa === 'edit' ? 'bg-blue-500/15 text-blue-500' : ($aa === 'tambah' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'));
+      ?>
+      <div class="flex items-center gap-3 text-xs bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5">
+        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0 <?=$cls?>"><?=e(strtoupper($aa))?></span>
+        <div class="flex-grow min-w-0"><b><?=e($a['username'])?></b> <span class="text-slate-500"><?=e($a['detail'])?></span><br><span class="text-slate-500"><?=e($fa)?> • <?=e($a['ip'] ?: '-')?></span></div>
+      </div>
+      <?php endforeach; ?>
+      <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 pt-2">Jejak login (50 terbaru)</p>
       <?php if (!$logs): ?><p class="text-center text-slate-500 italic text-xs py-6">Belum ada aktivitas login.</p><?php endif; ?>
       <?php foreach ($logs as $l):
         $t = strtotime($l['waktu']);

@@ -1,6 +1,8 @@
 <?php
 // Halaman Harian — fungsi tetap, tampilan mengikuti template
-$owner = !empty($owner); // karyawan: input saja, tanpa hapus
+$owner = !empty($owner); // owner selalu boleh; karyawan ikut pengaturan hak akses
+$bEditTrx = izin($pdo, 'izin_edit_transaksi');
+$bHapusTrx = izin($pdo, 'izin_hapus_transaksi');
 $bulan = bulan_aktif();
 $tanggal = tanggal_aktif();
 if (substr($tanggal,0,7) !== $bulan) { $tanggal = $bulan . '-01'; }
@@ -217,8 +219,9 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
                 <td class="p-3 text-center font-bold"><?=$j['qty']?></td>
                 <td class="p-3 text-right font-bold text-emerald-600 dark:text-emerald-400"><?=rupiah($j['jumlah'])?></td>
                 <td class="p-3"><span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-500/15"><?=e(($j['dibuat_oleh'] ?? '') !== '' ? $j['dibuat_oleh'] : '-')?></span></td>
-                <td class="p-3 whitespace-nowrap"><?php if ($owner): ?>
+                <td class="p-3 whitespace-nowrap"><?php if ($bEditTrx): ?>
                   <button type="button" title="Edit qty" onclick="openQty(<?=$j['id']?>, '<?=e($j['kode_barang'])?> - <?=e($j['nama'] ?? '')?>', <?=$j['qty']?>)" class="text-blue-500 hover:text-blue-400 font-bold mr-2"><i class="fa-solid fa-pen"></i></button>
+                <?php endif; ?><?php if ($bHapusTrx): ?>
                   <form method="post" style="display:inline" onsubmit="return confirm('Hapus baris ini?')">
                     <input type="hidden" name="aksi" value="jual_hapus"><input type="hidden" name="id" value="<?=$j['id']?>"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>">
                     <button class="text-rose-500 hover:text-rose-400 font-bold">×</button>
@@ -266,7 +269,7 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
             <tbody class="tbl-body">
               <?php foreach ($keluar as $k): ?>
               <tr class="border-b tbl-row"><td class="p-3"><?=e($k['nama'])?></td><td class="p-3 text-right"><?=rupiah($k['harga'])?></td><td class="p-3 text-center font-bold"><?=$k['qty']?></td><td class="p-3 text-right font-bold"><?=rupiah($k['jumlah'])?></td>
-              <td class="p-3"><?php if ($owner): ?><form method="post"><input type="hidden" name="aksi" value="keluar_hapus"><input type="hidden" name="id" value="<?=$k['id']?>"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>"><button class="text-rose-500 font-bold">×</button></form><?php endif; ?></td></tr>
+              <td class="p-3"><?php if ($bHapusTrx): ?><form method="post"><input type="hidden" name="aksi" value="keluar_hapus"><input type="hidden" name="id" value="<?=$k['id']?>"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>"><button class="text-rose-500 font-bold">×</button></form><?php endif; ?></td></tr>
               <?php endforeach; ?>
               <?php if (!$keluar): ?><tr><td colspan="5" class="p-5 text-center text-slate-500 italic">Belum ada catatan pengeluaran hari ini.</td></tr><?php endif; ?>
             </tbody>
@@ -311,11 +314,11 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
             <tbody class="tbl-body">
               <?php foreach ($pinjamHari as $p): ?>
               <tr class="border-b tbl-row"><td class="p-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">PINJAM</span></td><td class="p-3 font-semibold"><?=e($p['nama'])?></td><td class="p-3 text-right font-bold"><?=rupiah($p['jumlah'])?></td><td class="p-3 text-slate-500"><?=e($p['keterangan'])?></td>
-              <td class="p-3"><?php if ($owner): ?><form method="post" onsubmit="return confirm('Hapus kasbon ini?')"><input type="hidden" name="aksi" value="kasbon_hapus"><input type="hidden" name="id" value="<?=$p['id']?>"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>"><button class="text-rose-500 font-bold">×</button></form><?php endif; ?></td></tr>
+              <td class="p-3"><?php if ($bHapusTrx): ?><form method="post" onsubmit="return confirm('Hapus kasbon ini?')"><input type="hidden" name="aksi" value="kasbon_hapus"><input type="hidden" name="id" value="<?=$p['id']?>"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>"><button class="text-rose-500 font-bold">×</button></form><?php endif; ?></td></tr>
               <?php endforeach; ?>
               <?php foreach ($setorHari as $s): ?>
               <tr class="border-b tbl-row"><td class="p-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">SETOR</span></td><td class="p-3 font-semibold"><?=e($s['nama'])?></td><td class="p-3 text-right font-bold"><?=rupiah($s['jumlah'])?></td><td class="p-3 text-slate-500"><?=e($s['keterangan'])?></td>
-              <td class="p-3"><?php if ($owner): ?><form method="post" onsubmit="return confirm('Hapus setoran ini?')"><input type="hidden" name="aksi" value="setoran_hapus"><input type="hidden" name="id" value="<?=$s['id']?>"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>"><button class="text-rose-500 font-bold">×</button></form><?php endif; ?></td></tr>
+              <td class="p-3"><?php if ($bHapusTrx): ?><form method="post" onsubmit="return confirm('Hapus setoran ini?')"><input type="hidden" name="aksi" value="setoran_hapus"><input type="hidden" name="id" value="<?=$s['id']?>"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>"><button class="text-rose-500 font-bold">×</button></form><?php endif; ?></td></tr>
               <?php endforeach; ?>
               <?php if (!$pinjamHari && !$setorHari): ?><tr><td colspan="5" class="p-5 text-center text-slate-500 italic">Belum ada kasbon/setoran hari ini.</td></tr><?php endif; ?>
             </tbody>
@@ -327,7 +330,7 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
   </div>
 </div>
 
-<?php if ($owner): ?>
+<?php if ($bEditTrx): ?>
 <div id="qtyModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="background:rgba(2,6,12,.8);backdrop-filter:blur(6px)">
   <div class="glass-card rounded-3xl w-full max-w-xs p-6 space-y-4">
     <h3 class="font-bold text-sm flex items-center"><i class="fa-solid fa-pen text-blue-500 mr-2.5"></i> Edit Qty</h3>

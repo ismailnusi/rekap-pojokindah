@@ -1,6 +1,8 @@
 <?php
 // Data Barang — fungsi tetap, tampilan mengikuti template
-$owner = !empty($owner); // true = owner, false = karyawan (baca saja)
+$owner = !empty($owner); // kolom modal tetap khusus owner
+$bUbahBrg = izin($pdo, 'izin_ubah_barang');
+$bHapusBrg = izin($pdo, 'izin_hapus_barang');
 $q = trim($_GET['q'] ?? '');
 if ($q !== '') {
     $st = $pdo->prepare("SELECT * FROM barang WHERE kode LIKE ? OR nama LIKE ? ORDER BY kode");
@@ -32,7 +34,7 @@ $restock = stok_menipis($pdo);
     <h3 class="font-bold text-sm flex items-center"><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-2.5"></i> Perlu Restock (<?=count($restock)?>)</h3>
     <div class="mt-3 flex flex-wrap gap-2">
       <?php foreach ($restock as $r): ?>
-        <?php if ($owner): ?>
+        <?php if ($bUbahBrg): ?>
         <a href="index.php?page=barang&edit=<?=e($r['kode'])?>" title="Klik untuk tambah stok" class="flex items-center gap-2 text-xs px-3 py-2 rounded-xl border <?= $r['status'] === 'habis' ? 'bg-rose-500/10 border-rose-500/40 text-rose-600 dark:text-rose-400' : 'bg-amber-500/10 border-amber-500/40 text-amber-600 dark:text-amber-400' ?> hover:scale-105 transition">
         <?php else: ?>
         <span class="flex items-center gap-2 text-xs px-3 py-2 rounded-xl border <?= $r['status'] === 'habis' ? 'bg-rose-500/10 border-rose-500/40 text-rose-600 dark:text-rose-400' : 'bg-amber-500/10 border-amber-500/40 text-amber-600 dark:text-amber-400' ?>">
@@ -40,7 +42,7 @@ $restock = stok_menipis($pdo);
           <b class="font-mono"><?=e($r['kode'])?></b> <?=e($r['nama'])?>
           <span class="font-bold">sisa <?=e($r['sisa'])?></span>
           <span class="opacity-70"><?= $r['status'] === 'habis' ? 'HABIS' : 'min ' . $r['stok_min'] ?></span>
-        <?= $owner ? '</a>' : '</span>' ?>
+        <?= $bUbahBrg ? '</a>' : '</span>' ?>
       <?php endforeach; ?>
     </div>
     <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2">Klik item untuk tambah stoknya.</p>
@@ -62,8 +64,8 @@ $restock = stok_menipis($pdo);
     </div>
   </div>
 
-  <div class="grid <?= $owner ? 'lg:grid-cols-12' : '' ?> gap-6">
-    <?php if ($owner): ?>
+  <div class="grid <?= $bUbahBrg ? 'lg:grid-cols-12' : '' ?> gap-6">
+    <?php if ($bUbahBrg): ?>
     <div class="lg:col-span-4 glass-card p-6 rounded-3xl space-y-4 h-fit">
       <h3 class="font-bold text-sm border-b border-slate-200 dark:border-slate-800 pb-4 flex items-center">
         <i class="fa-solid fa-square-plus text-emerald-500 mr-2.5"></i> <?= $edit ? 'Edit Item '.e($edit['kode']) : 'Tambah Item Baru' ?>
@@ -106,12 +108,12 @@ $restock = stok_menipis($pdo);
     </div>
     <?php endif; ?>
 
-    <div class="<?= $owner ? 'lg:col-span-8' : '' ?> glass-card p-6 rounded-3xl space-y-4">
-      <h3 class="font-bold text-sm border-b border-slate-200 dark:border-slate-800 pb-4">Daftar Inventaris <?= $owner ? '' : '<span class="text-[11px] font-normal text-slate-500">(baca saja — perubahan oleh Owner)</span>' ?></h3>
+    <div class="<?= $bUbahBrg ? 'lg:col-span-8' : '' ?> glass-card p-6 rounded-3xl space-y-4">
+      <h3 class="font-bold text-sm border-b border-slate-200 dark:border-slate-800 pb-4">Daftar Inventaris <?= $bUbahBrg ? '' : '<span class="text-[11px] font-normal text-slate-500">(baca saja — perubahan oleh Owner)</span>' ?></h3>
       <div class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto custom-scrollbar">
         <table class="w-full text-left text-xs min-w-[760px]">
           <thead class="tbl-head font-semibold border-b border-slate-200 dark:border-slate-800">
-            <tr><th class="p-3 text-center">Preview</th><th class="p-3">Kode</th><th class="p-3">Nama Produk</th><th class="p-3 text-right">Harga Jual</th><?= $owner ? '<th class="p-3 text-right">Modal</th>' : '' ?><th class="p-3 text-right">Stok Awal</th><th class="p-3 text-right">Min</th><th class="p-3 text-right">Terjual</th><th class="p-3 text-right">Sisa Stok</th><?= $owner ? '<th class="p-3 text-center">Aksi</th>' : '' ?></tr>
+            <tr><th class="p-3 text-center">Preview</th><th class="p-3">Kode</th><th class="p-3">Nama Produk</th><th class="p-3 text-right">Harga Jual</th><?= $owner ? '<th class="p-3 text-right">Modal</th>' : '' ?><th class="p-3 text-right">Stok Awal</th><th class="p-3 text-right">Min</th><th class="p-3 text-right">Terjual</th><th class="p-3 text-right">Sisa Stok</th><?= ($bUbahBrg || $bHapusBrg) ? '<th class="p-3 text-center">Aksi</th>' : '' ?></tr>
           </thead>
           <tbody class="tbl-body divide-y tbl-row">
             <?php foreach ($rows as $r):
@@ -138,13 +140,17 @@ $restock = stok_menipis($pdo);
               <td class="p-3 text-right text-slate-500"><?= $awal > 0 ? (int)($r['stok_min'] ?? 0) : '<span class="text-slate-400">-</span>' ?></td>
               <td class="p-3 text-right"><?= $awal > 0 ? $tj : '<span class="text-slate-400">-</span>' ?></td>
               <td class="p-3 text-right font-bold <?= $sisa === null ? 'text-slate-400' : ($sisa <= 0 ? 'text-rose-500' : ($sisa <= 5 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400')) ?>"><?= $sisa === null ? '∞' : $sisa ?></td>
-              <?php if ($owner): ?>
+              <?php if ($bUbahBrg || $bHapusBrg): ?>
               <td class="p-3 text-center space-x-1 whitespace-nowrap">
+                <?php if ($bUbahBrg): ?>
                 <a href="index.php?page=barang&edit=<?=e($r['kode'])?><?= $q!==''?'&q='.urlencode($q):'' ?>" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition inline-block">Edit</a>
+                <?php endif; ?>
+                <?php if ($bHapusBrg): ?>
                 <form method="post" style="display:inline" onsubmit="return confirm('Hapus <?=e($r['kode'])?> ?')">
                   <input type="hidden" name="aksi" value="barang_hapus"><input type="hidden" name="kode" value="<?=e($r['kode'])?>">
                   <button class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition">Hapus</button>
                 </form>
+                <?php endif; ?>
               </td>
               <?php endif; ?>
             </tr>
