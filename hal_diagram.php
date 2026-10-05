@@ -105,7 +105,7 @@ if ($mode === 'bulan') {
 
 <?php
 // rincian pengeluaran (sesuai periode: semua / bulan)
-$rk = $pdo->prepare("SELECT tanggal, nama, harga, qty, jumlah FROM pengeluaran WHERE $wT ORDER BY tanggal DESC, id DESC LIMIT 300");
+$rk = $pdo->prepare("SELECT tanggal, nama, harga, qty, jumlah, COALESCE(dibuat_oleh,'') AS dibuat_oleh FROM pengeluaran WHERE $wT ORDER BY tanggal DESC, id DESC LIMIT 300");
 $rk->execute($pT);
 $rincian = $rk->fetchAll(PDO::FETCH_ASSOC);
 $hrP = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
@@ -124,9 +124,9 @@ $blP = [1=>'Jan',2=>'Feb',3=>'Mar',4=>'Apr',5=>'Mei',6=>'Jun',7=>'Jul',8=>'Agu',
       <?php if (!$rincian): ?>
         <p class="text-center text-slate-500 italic text-xs py-8">Belum ada pengeluaran pada periode ini.</p>
       <?php else: ?>
-      <table class="w-full text-left text-xs min-w-[480px]">
+      <table class="w-full text-left text-xs min-w-[560px]">
         <thead class="tbl-head font-semibold border-b border-slate-200 dark:border-slate-800 sticky top-0">
-          <tr><th class="p-3">Tanggal</th><th class="p-3">Pengeluaran</th><th class="p-3 text-right">Harga</th><th class="p-3 text-center">Qty</th><th class="p-3 text-right">Jumlah</th></tr>
+          <tr><th class="p-3">Tanggal</th><th class="p-3">Pengeluaran</th><th class="p-3 text-right">Harga</th><th class="p-3 text-center">Qty</th><th class="p-3 text-right">Jumlah</th><th class="p-3">Diinput Oleh</th></tr>
         </thead>
         <tbody class="tbl-body divide-y tbl-row">
           <?php foreach ($rincian as $r):
@@ -139,6 +139,7 @@ $blP = [1=>'Jan',2=>'Feb',3=>'Mar',4=>'Apr',5=>'Mei',6=>'Jun',7=>'Jul',8=>'Agu',
             <td class="p-3 text-right text-slate-500"><?=rupiah($r['harga'])?></td>
             <td class="p-3 text-center font-bold"><?=$r['qty']?></td>
             <td class="p-3 text-right font-bold text-rose-500"><?=rupiah($r['jumlah'])?></td>
+            <td class="p-3"><span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-500/15"><?=e($r['dibuat_oleh'] !== '' ? $r['dibuat_oleh'] : '-')?></span></td>
           </tr>
           <?php endforeach; ?>
         </tbody>

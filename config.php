@@ -74,6 +74,11 @@ function migrate($pdo) {
         keterangan TEXT DEFAULT ''
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_setoran_tgl ON kasbon_setoran(tanggal)");
+    // pelacakan siapa yang menginput pengeluaran
+    $pcols = $pdo->query("PRAGMA table_info(pengeluaran)")->fetchAll(PDO::FETCH_COLUMN, 1);
+    if (!in_array('dibuat_oleh', $pcols, true)) {
+        $pdo->exec("ALTER TABLE pengeluaran ADD COLUMN dibuat_oleh TEXT DEFAULT ''");
+    }
     // invoice / nota percetakan
     $pdo->exec("CREATE TABLE IF NOT EXISTS invoice (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -193,8 +193,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $harga = (int)($_POST['harga'] ?? 0);
         $qty = max(1,(int)($_POST['qty'] ?? 1));
         if ($nama !== '') {
-            $pdo->prepare("INSERT INTO pengeluaran (tanggal,nama,harga,qty,jumlah) VALUES (?,?,?,?,?)")
-                ->execute([$tanggal,$nama,$harga,$qty,$harga*$qty]);
+            $pdo->prepare("INSERT INTO pengeluaran (tanggal,nama,harga,qty,jumlah,dibuat_oleh) VALUES (?,?,?,?,?,?)")
+                ->execute([$tanggal,$nama,$harga,$qty,$harga*$qty,$_SESSION['uname'] ?? '']);
         }
         header('Location: index.php?page=harian&tanggal='.urlencode($tanggal).'&bulan='.substr($tanggal,0,7)); exit;
     }
