@@ -1,0 +1,4 @@
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/rekn2682/public_html/app.rekapojokindah.id
+    - /bin/cp -R * $DEPLOYPATH
