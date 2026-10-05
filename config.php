@@ -79,6 +79,11 @@ function migrate($pdo) {
     if (!in_array('dibuat_oleh', $pcols, true)) {
         $pdo->exec("ALTER TABLE pengeluaran ADD COLUMN dibuat_oleh TEXT DEFAULT ''");
     }
+    // pelacakan siapa yang menginput transaksi harian
+    $tcols = $pdo->query("PRAGMA table_info(transaksi)")->fetchAll(PDO::FETCH_COLUMN, 1);
+    if (!in_array('dibuat_oleh', $tcols, true)) {
+        $pdo->exec("ALTER TABLE transaksi ADD COLUMN dibuat_oleh TEXT DEFAULT ''");
+    }
     // invoice / nota percetakan
     $pdo->exec("CREATE TABLE IF NOT EXISTS invoice (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

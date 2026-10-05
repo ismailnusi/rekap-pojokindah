@@ -204,9 +204,9 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
           </button>
         </form>
         <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 custom-scrollbar mt-4">
-          <table class="w-full text-left text-xs min-w-[560px]">
+          <table class="w-full text-left text-xs min-w-[640px]">
             <thead class="tbl-head font-semibold border-b border-slate-200 dark:border-slate-800">
-              <tr><th class="p-3">Kode</th><th class="p-3">Nama Item</th><th class="p-3 text-right">Harga</th><th class="p-3 text-center">Qty</th><th class="p-3 text-right">Total</th><th class="p-3"></th></tr>
+              <tr><th class="p-3">Kode</th><th class="p-3">Nama Item</th><th class="p-3 text-right">Harga</th><th class="p-3 text-center">Qty</th><th class="p-3 text-right">Total</th><th class="p-3">Diinput Oleh</th><th class="p-3"></th></tr>
             </thead>
             <tbody class="tbl-body divide-y tbl-row">
               <?php foreach ($jual as $j): ?>
@@ -216,13 +216,16 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
                 <td class="p-3 text-right text-slate-500 dark:text-slate-400"><?=rupiah($j['harga'])?></td>
                 <td class="p-3 text-center font-bold"><?=$j['qty']?></td>
                 <td class="p-3 text-right font-bold text-emerald-600 dark:text-emerald-400"><?=rupiah($j['jumlah'])?></td>
-                <td class="p-3"><?php if ($owner): ?><form method="post" onsubmit="return confirm('Hapus baris ini?')">
-                  <input type="hidden" name="aksi" value="jual_hapus"><input type="hidden" name="id" value="<?=$j['id']?>"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>">
-                  <button class="text-rose-500 hover:text-rose-400 font-bold">×</button>
-                </form><?php endif; ?></td>
+                <td class="p-3"><span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-500/15"><?=e(($j['dibuat_oleh'] ?? '') !== '' ? $j['dibuat_oleh'] : '-')?></span></td>
+                <td class="p-3 whitespace-nowrap"><?php if ($owner): ?>
+                  <button type="button" title="Edit qty" onclick="openQty(<?=$j['id']?>, '<?=e($j['kode_barang'])?> - <?=e($j['nama'] ?? '')?>', <?=$j['qty']?>)" class="text-blue-500 hover:text-blue-400 font-bold mr-2"><i class="fa-solid fa-pen"></i></button>
+                  <form method="post" style="display:inline" onsubmit="return confirm('Hapus baris ini?')">
+                    <input type="hidden" name="aksi" value="jual_hapus"><input type="hidden" name="id" value="<?=$j['id']?>"><input type="hidden" name="tanggal" value="<?=e($tanggal)?>">
+                    <button class="text-rose-500 hover:text-rose-400 font-bold">×</button>
+                  </form><?php endif; ?></td>
               </tr>
               <?php endforeach; ?>
-              <?php if (!$jual): ?><tr><td colspan="6" class="p-5 text-center text-slate-500 italic">Belum ada penjualan hari ini — input dari buku manual saat closing.</td></tr><?php endif; ?>
+              <?php if (!$jual): ?><tr><td colspan="7" class="p-5 text-center text-slate-500 italic">Belum ada penjualan hari ini — input dari buku manual saat closing.</td></tr><?php endif; ?>
             </tbody>
           </table>
         </div>
@@ -323,6 +326,46 @@ $judulTanggal = $hariIndo[(int)date('w', $ts)] . ', ' . (int)date('j', $ts) . ' 
     </div>
   </div>
 </div>
+
+<?php if ($owner): ?>
+<div id="qtyModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="background:rgba(2,6,12,.8);backdrop-filter:blur(6px)">
+  <div class="glass-card rounded-3xl w-full max-w-xs p-6 space-y-4">
+    <h3 class="font-bold text-sm flex items-center"><i class="fa-solid fa-pen text-blue-500 mr-2.5"></i> Edit Qty</h3>
+    <p id="qtyInfo" class="text-xs text-slate-500 dark:text-slate-400"></p>
+    <form method="post" class="space-y-3">
+      <input type="hidden" name="aksi" value="jual_edit_qty">
+      <input type="hidden" name="id" id="qtyId">
+      <input type="hidden" name="tanggal" value="<?=e($tanggal)?>">
+      <input type="number" name="qty" id="qtyVal" min="1" required class="w-full text-sm glass-input rounded-xl p-3 focus:outline-none">
+      <div class="flex gap-2">
+        <button type="button" id="qtyCancel" class="flex-1 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Batal</button>
+        <button class="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-extrabold py-2.5 rounded-xl text-xs transition">Simpan</button>
+      </div>
+    </form>
+    <p class="text-[11px] text-slate-500 dark:text-slate-400">Total item, Total Pendapatan &amp; Sisa Kas dihitung ulang otomatis.</p>
+  </div>
+</div>
+
+<script>
+function openQty(id, nama, qty) {
+  document.getElementById('qtyId').value = id;
+  document.getElementById('qtyVal').value = qty;
+  document.getElementById('qtyInfo').textContent = nama + ' (saat ini: ' + qty + ')';
+  var m = document.getElementById('qtyModal');
+  m.classList.remove('hidden'); m.classList.add('flex');
+  document.getElementById('qtyVal').focus();
+  document.getElementById('qtyVal').select();
+}
+(function () {
+  var m = document.getElementById('qtyModal');
+  if (!m) return;
+  function close() { m.classList.add('hidden'); m.classList.remove('flex'); }
+  document.getElementById('qtyCancel').addEventListener('click', close);
+  m.addEventListener('click', function (e) { if (e.target === m) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !m.classList.contains('hidden')) close(); });
+})();
+</script>
+<?php endif; ?>
 
 <script>
 const BARANG = <?=json_encode(array_map(function ($b) use ($terjualAll) {

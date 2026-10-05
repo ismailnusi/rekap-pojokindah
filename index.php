@@ -151,8 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stokAwal > 0 && $qty > ($stokAwal - $sold)) {
                 flash("Stok $kode tidak cukup (sisa " . ($stokAwal - $sold) . "). Tambah stok di Data Barang.");
             } else {
-            $pdo->prepare("INSERT INTO transaksi (tanggal,kode_barang,harga,qty,jumlah) VALUES (?,?,?,?,?)")
-                ->execute([$tanggal,$kode,$harga,$qty,$harga*$qty]);
+            $pdo->prepare("INSERT INTO transaksi (tanggal,kode_barang,harga,qty,jumlah,dibuat_oleh) VALUES (?,?,?,?,?,?)")
+                ->execute([$tanggal,$kode,$harga,$qty,$harga*$qty,$_SESSION['uname'] ?? '']);
             $dup = $pdo->prepare("SELECT id, qty FROM transaksi WHERE tanggal=? AND kode_barang=? AND harga=? ORDER BY id");
             $dup->execute([$tanggal,$kode,$harga]);
             $rows = $dup->fetchAll(PDO::FETCH_ASSOC);
@@ -176,6 +176,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int)($_POST['id'] ?? 0);
         $pdo->prepare("DELETE FROM transaksi WHERE id=?")->execute([$id]);
         header('Location: index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7)); exit;
+    }
+    if ($aksi === 'jual_edit_qty') {
+        $t = $_POST['tanggal'] ?? date('Y-m-d');
+        $back = 'index.php?page=harian&tanggal='.urlencode($t).'&bulan='.substr($t,0,7);
+        if (!$owner) $hanyaOwner($back);
+        $id = (int)($_POST['id'] ?? 0);
+        $qty = max(1, (int)($_POST['qty'] ?? 1));
+        $st = $pdo->prepare("SELECT t.*, COALESCE(b.stok_awal,0) AS stok_awal FROM transaksi t LEFT JOIN barang b ON b.kode=t.kode_barang WHERE t.id=?");
+        $st->execute([$id]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        if (!$row) { flash('Transaksi tidak ditemukan.'); }
+        else {
+            $stokAwal = (int)$row['stok_awal'];
+            if ($stokAwal > 0) {
+                $sq = $pdo->prepare("SELECT COALESCE(SUM(qty),0) FROM transaksi WHERE kode_barang=? AND id<>?");
+                $sq->execute([$row['kode_barang'], $id]);
+                $maks = $stokAwal - (int)$sq->fetchColumn();
+                if ($qty > $maks) { flash("Qty melebihi sisa stok {$row['kode_barang']} (maks $maks)."); header('Location: '.$back); exit; }
+            }
+            $pdo->prepare("UPDATE transaksi SET qty=?, jumlah=?, dibuat_oleh=? WHERE id=?")
+                ->execute([$qty, $qty * (int)$row['harga'], $_SESSION['uname'] ?? '', $id]);
+            flash("Qty {$row['kode_barang']} diubah menjadi $qty.");
+        }
+        header('Location: '.$back); exit;
     }
 
     if ($aksi === 'transfer_simpan') {
