@@ -45,6 +45,14 @@ if (($_GET['ajax'] ?? '') === 'libur') {
     echo json_encode(hari_libur($yr));
     exit;
 }
+// tandai notifikasi login dibaca
+if (($_GET['ajax'] ?? '') === 'notif_baca') {
+    if (!$owner) { http_response_code(403); exit; }
+    $_SESSION['notif_seen'] = (int)$pdo->query("SELECT COALESCE(MAX(id),0) FROM login_log")->fetchColumn();
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => true]);
+    exit;
+}
 
 // ===== AKSI POST (fungsi tetap, tidak diubah) =====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -423,6 +431,12 @@ $bulan = bulan_aktif();
 $tanggal = tanggal_aktif();
 $nav = function($p) use ($page) { return $p === $page ? 'nav-link active' : 'nav-link'; };
 $jmlRestock = count(stok_menipis($pdo));
+// notifikasi jejak login (owner saja)
+$notifUnread = 0;
+if ($owner) {
+    $seen = (int)($_SESSION['notif_seen'] ?? 0);
+    $notifUnread = (int)$pdo->query("SELECT COUNT(*) FROM login_log WHERE id > $seen")->fetchColumn();
+}
 ?>
 <!DOCTYPE html>
 <html lang="id" class="dark">
@@ -537,6 +551,12 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
           <i class="fa-solid fa-circle-user"></i>
           <span class="hidden sm:inline max-w-[80px] truncate"><?=e($_SESSION['uname'] ?? '')?></span>
         </button>
+        <?php if ($owner): ?>
+        <button id="notifBtn" type="button" title="Jejak login" class="relative h-10 w-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center hover:scale-105 transition text-sm">
+          <i class="fa-solid fa-bell <?= $notifUnread > 0 ? 'text-amber-500' : 'text-slate-400' ?>"></i>
+          <?php if ($notifUnread > 0): ?><span id="notifBadge" class="absolute -top-1.5 -right-1.5 text-[10px] font-extrabold bg-rose-500 text-white px-1.5 py-0.5 rounded-full"><?= $notifUnread > 99 ? '99+' : $notifUnread ?></span><?php endif; ?>
+        </button>
+        <?php endif; ?>
       </div>
     </div>
     <div id="mobileMenu" class="hidden md:hidden absolute top-full left-2 right-2 mt-1 glass-card rounded-2xl p-2 space-y-1 shadow-2xl z-50">
@@ -632,6 +652,57 @@ tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: {50:'
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !m.classList.contains('hidden')) close(); });
 })();
 </script>
+
+<?php if ($owner):
+  $logs = $pdo->query("SELECT username, status, ip, waktu FROM login_log ORDER BY id DESC LIMIT 50")->fetchAll(PDO::FETCH_ASSOC);
+?>
+<div id="notifModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="background:rgba(2,6,12,.8);backdrop-filter:blur(6px)">
+  <div class="glass-card rounded-3xl w-full max-w-md max-h-[82vh] flex flex-col overflow-hidden">
+    <div class="flex items-center justify-between gap-2 p-5 border-b border-slate-200 dark:border-slate-800">
+      <div>
+        <h3 class="font-bold text-sm flex items-center"><i class="fa-solid fa-bell text-amber-500 mr-2.5"></i> Jejak Login</h3>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Siapa masuk &amp; percobaan gagal • 50 terbaru</p>
+      </div>
+      <button type="button" id="notifClose" class="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-sm transition shrink-0">×</button>
+    </div>
+    <div class="overflow-auto custom-scrollbar p-4 space-y-2">
+      <?php if (!$logs): ?><p class="text-center text-slate-500 italic text-xs py-6">Belum ada aktivitas login.</p><?php endif; ?>
+      <?php foreach ($logs as $l):
+        $t = strtotime($l['waktu']);
+        $fw = date('d/m/Y H:i', $t);
+        $gagal = $l['status'] !== 'sukses';
+      ?>
+      <div class="flex items-center gap-3 text-xs bg-slate-50 dark:bg-slate-900/50 border <?= $gagal ? 'border-rose-500/40' : 'border-slate-200 dark:border-slate-800' ?> rounded-xl px-3 py-2.5">
+        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0 <?= $gagal ? 'bg-rose-500/15 text-rose-500' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' ?>"><?= $gagal ? 'GAGAL' : 'MASUK' ?></span>
+        <div class="flex-grow min-w-0"><b class="truncate block"><?=e($l['username'])?></b><span class="text-slate-500"><?=e($fw)?> • <?=e($l['ip'] ?: '-')?></span></div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var m = document.getElementById('notifModal');
+  var b = document.getElementById('notifBtn');
+  if (!m || !b) return;
+  function open() {
+    m.classList.remove('hidden'); m.classList.add('flex');
+    fetch('index.php?ajax=notif_baca').then(function () {
+      var bd = document.getElementById('notifBadge');
+      if (bd) bd.remove();
+      b.querySelector('i').classList.remove('text-amber-500');
+      b.querySelector('i').classList.add('text-slate-400');
+    });
+  }
+  function close() { m.classList.add('hidden'); m.classList.remove('flex'); }
+  b.addEventListener('click', open);
+  document.getElementById('notifClose').addEventListener('click', close);
+  m.addEventListener('click', function (e) { if (e.target === m) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !m.classList.contains('hidden')) close(); });
+})();
+</script>
+<?php endif; ?>
 
 <script>
 (function () {

@@ -123,6 +123,15 @@ function migrate($pdo) {
         $pdo->prepare("INSERT INTO users (username,password_hash,role) VALUES (?,?,?)")
             ->execute(['karyawan', password_hash('karyawan123', PASSWORD_DEFAULT), 'karyawan']);
     }
+    // jejak login (berhasil & gagal) untuk notifikasi admin
+    $pdo->exec("CREATE TABLE IF NOT EXISTS login_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'gagal',
+        ip TEXT DEFAULT '',
+        waktu TEXT DEFAULT CURRENT_TIMESTAMP
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_loginlog_waktu ON login_log(waktu)");
 
     // Seed 161 barang jika kosong
     $cek = $pdo->query("SELECT COUNT(*) FROM barang")->fetchColumn();
@@ -222,6 +231,16 @@ function require_login() {
 }
 function is_owner() {
     return ($_SESSION['role'] ?? '') === 'owner';
+}
+
+// IP pengunjung (untuk jejak login)
+function client_ip() {
+    $f = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+    if ($f !== '') {
+        $p = explode(',', $f);
+        return trim($p[0]);
+    }
+    return $_SERVER['REMOTE_ADDR'] ?? '';
 }
 
 // Nomor invoice otomatis: INV-YYYYMMDD-001 (urut per tanggal)

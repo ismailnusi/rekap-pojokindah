@@ -10,7 +10,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $st = $pdo->prepare("SELECT * FROM users WHERE username=?");
     $st->execute([$u]);
     $row = $st->fetch(PDO::FETCH_ASSOC);
-    if ($row && password_verify($p, $row['password_hash'])) {
+    $ok = $row && password_verify($p, $row['password_hash']);
+    // catat jejak (berhasil/gagal) + buang log > 90 hari
+    $pdo->prepare("INSERT INTO login_log (username,status,ip,waktu) VALUES (?,?,?,?)")
+        ->execute([$u !== '' ? $u : '(kosong)', $ok ? 'sukses' : 'gagal', client_ip(), date('Y-m-d H:i:s')]);
+    $pdo->exec("DELETE FROM login_log WHERE waktu < datetime('now','-90 days')");
+    if ($ok) {
         session_regenerate_id(true);
         $_SESSION['uid'] = $row['id'];
         $_SESSION['uname'] = $row['username'];
