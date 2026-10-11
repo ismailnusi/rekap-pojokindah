@@ -143,7 +143,7 @@ if (($inv['kasir'] ?? '') !== '') {
     <div>Hormat kami<br>
       <?php if ($isAdminKasir): ?>
       <span class="ttd-admin">
-        <img class="cap" src="<?=e($capImg)?>" alt="">
+        <?php if ($inv['status'] === 'lunas'): ?><img class="cap" src="<?=e($capImg)?>" alt=""><?php endif; ?>
         <img class="ttd-img" src="<?=e($ttdImg)?>" alt="TTD">
       </span><br>(Ismail Nusi)
       <?php else: ?>
