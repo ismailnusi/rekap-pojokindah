@@ -34,6 +34,7 @@ unset($r);
         <input type="month" name="bulan" value="<?=e($bulan)?>" onchange="this.form.submit()" class="bg-transparent font-semibold focus:outline-none">
       </div>
       <button type="button" onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center"><i class="fa-solid fa-print mr-2"></i> Cetak PDF</button>
+      <a href="rekapan_unduh.php?bulan=<?=e($bulan)?>" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center shadow-lg shadow-emerald-500/20"><i class="fa-solid fa-file-excel mr-2"></i> Download Excel</a>
     </form>
   </div>
 
