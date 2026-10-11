@@ -24,14 +24,22 @@ $t = strtotime($inv['tanggal']);
 $ftgl = date('d/m/Y', $t);
 $isStruk = ($kertas === 't58' || $kertas === 't80');
 $nmKertas = ['t58' => 'Thermal 58mm', 't80' => 'Thermal 80mm', 'a5' => 'Kertas A5', 'a4' => 'Kertas A4'];
-// TTD + cap khusus admin (Ismail Nusi); kasir karyawan dikosongkan dulu
-$ttdImg = 'uploads/image/' . rawurlencode('Tanda tangan ismail nusi.png');
+// TTD + cap: admin (Ismail Nusi) & karyawan (Risman Polapa); cap muncul saat lunas
+$ttdIsmail = 'uploads/image/' . rawurlencode('Tanda tangan ismail nusi.png');
+$ttdRisman = 'uploads/image/' . rawurlencode('Tanda tangan risman polapa.png');
 $capImg = 'uploads/image/' . rawurlencode('cap.png');
 $isAdminKasir = false;
 if (($inv['kasir'] ?? '') !== '') {
     $rk = $pdo->prepare("SELECT role FROM users WHERE username=?");
     $rk->execute([$inv['kasir']]);
     $isAdminKasir = ($rk->fetchColumn() === 'owner');
+}
+if ($isAdminKasir) {
+    $ttdImg = $ttdIsmail;
+    $namaTtd = 'Ismail Nusi';
+} else {
+    $ttdImg = $ttdRisman;
+    $namaTtd = (strtolower(trim($inv['kasir'] ?? '')) === 'risman') ? 'Risman Polapa' : ($inv['kasir'] ?: 'Kasir');
 }
 ?>
 <!DOCTYPE html>
@@ -141,14 +149,10 @@ if (($inv['kasir'] ?? '') !== '') {
   <div class="ttd">
     <div>Pelanggan<br><br><br><br>( <?=e($inv['pelanggan'])?> )</div>
     <div>Hormat kami<br>
-      <?php if ($isAdminKasir): ?>
       <span class="ttd-admin">
         <?php if ($inv['status'] === 'lunas'): ?><img class="cap" src="<?=e($capImg)?>" alt=""><?php endif; ?>
         <img class="ttd-img" src="<?=e($ttdImg)?>" alt="TTD">
-      </span><br>(Ismail Nusi)
-      <?php else: ?>
-      <br><br><br>( <?=e($inv['kasir'] ?: 'Kasir')?> )
-      <?php endif; ?>
+      </span><br>(<?=e($namaTtd)?>)
     </div>
   </div>
   <p style="margin-top:16px;font-size:11px;color:#444">Catatan: Barang yang sudah dibeli tidak dapat dikembalikan. Simpan nota ini sebagai bukti pembayaran yang sah.</p>
