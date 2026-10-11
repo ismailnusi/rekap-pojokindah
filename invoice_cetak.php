@@ -24,6 +24,15 @@ $t = strtotime($inv['tanggal']);
 $ftgl = date('d/m/Y', $t);
 $isStruk = ($kertas === 't58' || $kertas === 't80');
 $nmKertas = ['t58' => 'Thermal 58mm', 't80' => 'Thermal 80mm', 'a5' => 'Kertas A5', 'a4' => 'Kertas A4'];
+// TTD + cap khusus admin (Ismail Nusi); kasir karyawan dikosongkan dulu
+$ttdImg = 'uploads/image/' . rawurlencode('Tanda tangan ismail nusi.png');
+$capImg = 'uploads/image/' . rawurlencode('cap.png');
+$isAdminKasir = false;
+if (($inv['kasir'] ?? '') !== '') {
+    $rk = $pdo->prepare("SELECT role FROM users WHERE username=?");
+    $rk->execute([$inv['kasir']]);
+    $isAdminKasir = ($rk->fetchColumn() === 'owner');
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -63,6 +72,9 @@ $nmKertas = ['t58' => 'Thermal 58mm', 't80' => 'Thermal 80mm', 'a5' => 'Kertas A
   .folio .tot { width: 220px; margin-left: auto; }
   .folio .tot td { padding: 3px 0; }
   .folio .ttd { display: flex; justify-content: space-between; margin-top: 28px; text-align: center; }
+  .folio .ttd-admin { position: relative; display: inline-block; margin-top: 4px; }
+  .folio .ttd-admin .cap { position: absolute; left: -14px; top: -4px; width: 112px; opacity: .55; transform: rotate(-11deg); mix-blend-mode: multiply; }
+  .folio .ttd-admin .ttd-img { position: relative; z-index: 1; height: 72px; margin-left: 52px; }
   .folio .stamp { display: inline-block; border: 2px solid #000; border-radius: 8px; font-weight: 800; padding: 4px 18px; margin-top: 10px; letter-spacing: 2px; }
   @media print {
     body { background: #fff; }
@@ -128,7 +140,16 @@ $nmKertas = ['t58' => 'Thermal 58mm', 't80' => 'Thermal 80mm', 'a5' => 'Kertas A
   <div><span class="stamp"><?=e($statusTxt[$inv['status']] ?? '')?></span></div>
   <div class="ttd">
     <div>Pelanggan<br><br><br><br>( <?=e($inv['pelanggan'])?> )</div>
-    <div>Hormat kami<br><br><br><br>( <?=e($inv['kasir'] ?: 'Kasir')?> )</div>
+    <div>Hormat kami<br>
+      <?php if ($isAdminKasir): ?>
+      <span class="ttd-admin">
+        <img class="cap" src="<?=e($capImg)?>" alt="">
+        <img class="ttd-img" src="<?=e($ttdImg)?>" alt="TTD">
+      </span><br>(Ismail Nusi)
+      <?php else: ?>
+      <br><br><br>( <?=e($inv['kasir'] ?: 'Kasir')?> )
+      <?php endif; ?>
+    </div>
   </div>
   <p style="margin-top:16px;font-size:11px;color:#444">Catatan: Barang yang sudah dibeli tidak dapat dikembalikan. Simpan nota ini sebagai bukti pembayaran yang sah.</p>
 <?php endif; ?>
