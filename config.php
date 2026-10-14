@@ -217,8 +217,7 @@ function seed_barang($pdo) {
         ['F154','Materai10ribu',13000],['F155','MOKA BUKU',10000],['F156','SPIDOL HITAM',3000],
         ['F157','poster',35000],['F158','jilid buku laminating',20000],['F159','service print',250000],
         ['F160','Jilid Stase',35000],['F161','service laptop',100000],
-        ['F161','Jilid Stase',35000],['F161','service laptop',100000],
-    ];
+            ];
     $st = $pdo->prepare("INSERT OR IGNORE INTO barang (kode,nama,harga_jual,modal,gambar) VALUES (?,?,?,0,'')");
     foreach ($data as $d) {
         $st->execute([$d[0], $d[1], $d[2]]);
